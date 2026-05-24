@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shoulder Rehab Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1c1c1c;
+    --surface3: #242424;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8e4dc;
+    --muted: #666;
+    --muted2: #888;
+    --green: #4ade80;
+    --green-dim: rgba(74,222,128,0.1);
+    --green-border: rgba(74,222,128,0.25);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251,191,36,0.1);
+    --amber-border: rgba(251,191,36,0.25);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.1);
+    --red-border: rgba(248,113,113,0.25);
+    --blue: #60a5fa;
+    --blue-dim: rgba(96,165,250,0.1);
+    --blue-border: rgba(96,165,250,0.25);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+    line-height: 1.5;
+  }
+
+  .container { max-width: 760px; margin: 0 auto; }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 36px;
+    gap: 20px;
+  }
+  .header-left { border-left: 2px solid var(--green); padding-left: 18px; }
+  .header-left .eyebrow {
+    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--green); margin-bottom: 6px;
+  }
+  .header-left h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 400; line-height: 1.1;
+  }
+  .header-left h1 em { font-style: italic; color: var(--muted2); }
+  .header-right { text-align: right; flex-shrink: 0; }
+  .phase-badge {
+    display: inline-block;
+    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 5px 10px; border-radius: 20px;
+    background: var(--green-dim); border: 1px solid var(--green-border);
+    color: var(--green); margin-bottom: 6px;
+  }
+  .week-label {
+    font-size: 12px; color: var(--muted2);
+  }
+
+  /* ── PROGRESS OVERVIEW ── */
+  .progress-bar-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 24px;
+  }
+  .progress-bar-wrap .pb-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .pb-label { font-size: 12px; color: var(--muted2); }
+  .pb-pct { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--green); }
+  .pb-track {
+    height: 5px; background: var(--surface3); border-radius: 3px; overflow: hidden;
+  }
+  .pb-fill {
+    height: 100%; border-radius: 3px;
+    background: linear-gradient(to right, var(--green), #86efac);
+    transition: width 0.5s ease;
+  }
+  .stats-row {
+    display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;
+  }
+  .stat-pill {
+    flex: 1; min-width: 100px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; text-align: center;
+  }
+  .stat-pill .sv { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--text); }
+  .stat-pill .sl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
+
+  /* ── WEEK TABS ── */
+  .week-tabs {
+    display: flex; gap: 8px; margin-bottom: 20px;
+  }
+  .week-tab {
+    flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); font-size: 13px; font-weight: 500;
+    color: var(--muted2); cursor: pointer; text-align: center;
+    transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+  }
+  .week-tab.active {
+    background: var(--green-dim); border-color: var(--green-border);
+    color: var(--green);
+  }
+
+  /* ── DAY CARDS ── */
+  .days-grid { display: flex; flex-direction: column; gap: 12px; }
+
+  .day-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .day-card:hover { border-color: var(--border2); }
+  .day-card.today { border-color: var(--blue-border); }
+  .day-card.today .day-header { border-bottom-color: var(--blue-border); }
+
+  .day-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer; user-select: none;
+  }
+  .day-name-wrap { flex: 1; }
+  .day-name {
+    font-weight: 500; font-size: 15px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .today-badge {
+    font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 10px;
+    background: var(--blue-dim); border: 1px solid var(--blue-border);
+    color: var(--blue);
+  }
+  .day-date { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .day-type-badge {
+    font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 10px;
+  }
+  .day-type-badge.snooker {
+    background: var(--amber-dim); border: 1px solid var(--amber-border); color: var(--amber);
+  }
+  .day-type-badge.rest {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+  }
+  .day-type-badge.rehab {
+    background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green);
+  }
+  .day-type-badge.unlogged {
+    background: var(--surface2); border: 1px dashed var(--border2); color: var(--muted);
+    font-style: italic;
+  }
+  .day-check-summary {
+    display: flex; gap: 4px; align-items: center;
+  }
+  .mini-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--surface3); border: 1px solid var(--border);
+    transition: background 0.2s;
+  }
+  .mini-dot.done { background: var(--green); border-color: var(--green); }
+  .mini-dot.skip { background: var(--muted); border-color: var(--muted); }
+  .toggle-chevron {
+    font-size: 14px; color: var(--muted); transition: transform 0.25s;
+  }
+  .day-card.open .toggle-chevron { transform: rotate(180deg); }
+
+  .day-body { display: none; padding: 16px 18px 18px; }
+  .day-card.open .day-body { display: block; }
+
+  /* ── SECTIONS INSIDE DAY ── */
+  .section-title {
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 10px;
+  }
+  .optional-tag {
+    font-size: 9px; letter-spacing: 0.08em; text-transform: lowercase;
+    color: var(--muted); font-style: italic; margin-left: 6px;
+    border: 1px solid var(--border); border-radius: 3px;
+    padding: 1px 5px; vertical-align: middle;
+  }
+
+  /* CHECKLIST */
+  .checklist { display: flex; flex-direction: column; gap: 7px; margin-bottom: 18px; }
+  .check-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px; border-radius: 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+    cursor: pointer; user-select: none; transition: all 0.18s;
+  }
+  .check-item:hover { border-color: var(--border2); }
+  .check-item.checked {
+    background: var(--green-dim); border-color: var(--green-border);
+  }
+  .check-item.skipped {
+    opacity: 0.45;
+  }
+  .check-box {
+    width: 18px; height: 18px; border-radius: 4px;
+    border: 1.5px solid var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+    transition: all 0.18s;
+    font-size: 11px; color: transparent;
+  }
+  .check-item.checked .check-box {
+    background: var(--green); border-color: var(--green); color: #000;
+  }
+  .check-label { font-size: 13px; flex: 1; line-height: 1.4; }
+  .check-label .cl-main { font-weight: 400; }
+  .check-label .cl-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* FATIGUE SLIDER */
+  .fatigue-section { margin-bottom: 4px; }
+  .fatigue-row {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
+  }
+  .fatigue-label-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 6px;
+  }
+  .fatigue-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px; color: var(--text);
+    min-width: 28px; text-align: center;
+  }
+  .fatigue-desc { font-size: 11px; color: var(--muted2); }
+
+  .fatigue-track {
+    position: relative; flex: 1; height: 6px;
+    background: var(--surface3); border-radius: 3px;
+  }
+  .fatigue-fill {
+    height: 100%; border-radius: 3px;
+    transition: width 0.2s, background 0.2s;
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%; height: 6px;
+    background: transparent;
+    outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--text);
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.2);
+    cursor: pointer;
+  }
+
+  /* fatigue colour zones */
+  .fzone-labels {
+    display: flex; justify-content: space-between;
+    font-size: 10px; color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* NOTES */
+  .notes-wrap { margin-top: 14px; }
+  .notes-input {
+    width: 100%; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; font-size: 13px;
+    color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-weight: 300; resize: none; min-height: 60px;
+    transition: border-color 0.2s; outline: none;
+  }
+  .notes-input:focus { border-color: var(--border2); }
+  .notes-input::placeholder { color: var(--muted); }
+
+  /* SNOOKER SESSION LOG */
+  .session-row {
+    display: flex; gap: 8px; align-items: center;
+    margin-bottom: 10px;
+  }
+  .session-toggle {
+    display: flex; gap: 6px;
+  }
+  .stog-btn {
+    padding: 5px 12px; border-radius: 6px; font-size: 12px;
+    border: 1px solid var(--border); background: var(--surface2);
+    color: var(--muted2); cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .stog-btn.active-yes {
+    background: var(--green-dim); border-color: var(--green-border); color: var(--green);
+  }
+  .stog-btn.active-no {
+    background: var(--red-dim); border-color: var(--red-border); color: var(--red);
+  }
+
+  .duration-select {
+    flex: 1; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 5px 10px; font-size: 12px;
+    color: var(--text); font-family: 'DM Sans', sans-serif;
+    outline: none; cursor: pointer;
+  }
+
+  /* MORNING CHECK */
+  .morning-check-row {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;
+  }
+  .morning-btn {
+    flex: 1; min-width: 80px;
+    padding: 8px 10px; border-radius: 8px; font-size: 12px;
+    border: 1px solid var(--border); background: var(--surface2);
+    color: var(--muted2); cursor: pointer; font-family: 'DM Sans', sans-serif;
+    text-align: center; transition: all 0.15s;
+  }
+  .morning-btn.active {
+    font-weight: 500;
+  }
+  .morning-btn[data-val="1"].active { background: var(--green-dim); border-color: var(--green-border); color: var(--green); }
+  .morning-btn[data-val="2"].active { background: var(--amber-dim); border-color: var(--amber-border); color: var(--amber); }
+  .morning-btn[data-val="3"].active { background: var(--red-dim); border-color: var(--red-border); color: var(--red); }
+
+  /* PHASE GATE BOX */
+  .gate-box {
+    margin-top: 32px;
+    border: 1px dashed rgba(74,222,128,0.2);
+    border-radius: 12px; padding: 20px;
+  }
+  .gate-box h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px; font-weight: 400; margin-bottom: 4px;
+  }
+  .gate-box .gate-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .gate-items { display: flex; flex-direction: column; gap: 8px; }
+  .gate-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px; border-radius: 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+    font-size: 13px; cursor: pointer; user-select: none;
+    transition: all 0.18s;
+  }
+  .gate-item:hover { border-color: var(--border2); }
+  .gate-item.met {
+    background: var(--green-dim); border-color: var(--green-border);
+  }
+  .gate-cb {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 1.5px solid var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+    font-size: 10px; color: transparent;
+    transition: all 0.18s;
+  }
+  .gate-item.met .gate-cb {
+    background: var(--green); border-color: var(--green); color: #000;
+  }
+  .gate-ready-badge {
+    display: none; margin-top: 14px;
+    padding: 12px 16px; border-radius: 8px;
+    background: var(--green-dim); border: 1px solid var(--green-border);
+    font-size: 13px; color: var(--green);
+    text-align: center;
+  }
+  .gate-ready-badge.show { display: block; }
+
+  /* ── FOOTER ── */
+  .footer { margin-top: 48px; font-size: 11px; color: rgba(255,255,255,0.18); text-align: center; letter-spacing: 0.05em; }
+
+  /* ── ACTION BUTTONS ── */
+  .action-bar {
+    display: flex; gap: 10px; margin-top: 32px;
+  }
+  .action-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 18px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; border: 1px solid;
+    transition: all 0.18s;
+  }
+  .btn-icon { font-size: 15px; }
+  .save-btn {
+    background: var(--green-dim); border-color: var(--green-border); color: var(--green);
+  }
+  .save-btn:hover { background: rgba(74,222,128,0.18); border-color: var(--green); }
+  .reset-btn {
+    background: var(--surface); border-color: var(--border); color: var(--muted2);
+  }
+  .reset-btn:hover { background: var(--red-dim); border-color: var(--red-border); color: var(--red); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--surface2); border: 1px solid var(--border2);
+    color: var(--text); font-size: 13px; padding: 10px 20px; border-radius: 20px;
+    opacity: 0; pointer-events: none; transition: all 0.3s; white-space: nowrap;
+    z-index: 9999;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.green { border-color: var(--green-border); color: var(--green); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); z-index: 9998;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 14px; padding: 24px; max-width: 320px; width: 90%;
+  }
+  .modal-title {
+    font-family: 'DM Serif Display', serif; font-size: 18px; margin-bottom: 8px;
+  }
+  .modal-sub { font-size: 13px; color: var(--muted2); line-height: 1.5; margin-bottom: 20px; }
+  .modal-buttons { display: flex; gap: 8px; }
+  .modal-btn {
+    flex: 1; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; border: 1px solid; transition: all 0.15s;
+  }
+  .modal-btn.cancel {
+    background: var(--surface2); border-color: var(--border); color: var(--muted2);
+  }
+  .modal-btn.cancel:hover { border-color: var(--border2); color: var(--text); }
+  .modal-btn.confirm {
+    background: var(--red-dim); border-color: var(--red-border); color: var(--red);
+  }
+  .modal-btn.confirm:hover { background: rgba(248,113,113,0.2); }
+  .save-modal { max-width: 480px; }
+  .save-modal-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;
+  }
+  .copy-btn {
+    font-size: 12px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+    padding: 5px 12px; border-radius: 6px; cursor: pointer;
+    background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green);
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { background: rgba(74,222,128,0.2); }
+  .copy-btn.copied { background: rgba(74,222,128,0.25); }
+  .snapshot-textarea {
+    width: 100%; height: 320px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; font-size: 12px; font-family: monospace;
+    color: var(--muted2); resize: none; outline: none; margin-top: 8px;
+    line-height: 1.6;
+  }
+
+
+  /* ── REMINDERS ── */
+  .reminders-section {
+    margin-top: 32px;
+  }
+  .reminders-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .reminders-header h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px; font-weight: 400;
+  }
+  .reminders-header .rem-sub {
+    font-size: 11px; color: var(--muted); margin-top: 2px;
+  }
+  .reminder-grid {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .reminder-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 14px; border-radius: 10px;
+    border: 1px solid; cursor: pointer; user-select: none;
+    transition: all 0.2s;
+  }
+  .reminder-item.type-caution {
+    background: rgba(251,191,36,0.06); border-color: rgba(251,191,36,0.2);
+  }
+  .reminder-item.type-caution:hover { border-color: rgba(251,191,36,0.4); }
+  .reminder-item.type-avoid {
+    background: rgba(248,113,113,0.06); border-color: rgba(248,113,113,0.2);
+  }
+  .reminder-item.type-avoid:hover { border-color: rgba(248,113,113,0.4); }
+  .reminder-item.type-habit {
+    background: rgba(96,165,250,0.06); border-color: rgba(96,165,250,0.2);
+  }
+  .reminder-item.type-habit:hover { border-color: rgba(96,165,250,0.4); }
+  .reminder-item.acknowledged {
+    opacity: 0.38;
+  }
+  .reminder-item.acknowledged .rem-icon { opacity: 0.4; }
+  .rem-icon {
+    font-size: 15px; flex-shrink: 0; margin-top: 1px; width: 20px; text-align: center;
+  }
+  .rem-content { flex: 1; }
+  .rem-title {
+    font-size: 13px; font-weight: 500; margin-bottom: 3px;
+  }
+  .rem-title.caution { color: var(--amber); }
+  .rem-title.avoid { color: var(--red); }
+  .rem-title.habit { color: var(--blue); }
+  .rem-body { font-size: 12px; color: var(--muted2); line-height: 1.5; }
+  .rem-ack {
+    flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%;
+    border: 1.5px solid var(--muted); display: flex; align-items: center;
+    justify-content: center; font-size: 10px; color: transparent;
+    transition: all 0.18s; margin-top: 1px;
+  }
+  .reminder-item.acknowledged .rem-ack {
+    background: var(--muted); border-color: var(--muted); color: var(--bg);
+  }
+  .rem-reset-btn {
+    font-size: 11px; color: var(--muted); background: none; border: none;
+    cursor: pointer; font-family: 'DM Sans', sans-serif; padding: 2px 0;
+    transition: color 0.15s; text-decoration: underline; text-underline-offset: 2px;
+  }
+  .rem-reset-btn:hover { color: var(--muted2); }
+  .rem-deposit-box {
+    margin-top: 16px;
+    padding: 14px 16px; border-radius: 10px;
+    background: var(--green-dim); border: 1px solid var(--green-border);
+  }
+  .rem-deposit-title {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--green); margin-bottom: 10px; font-weight: 500;
+  }
+  .deposit-items { display: flex; flex-direction: column; gap: 6px; }
+  .deposit-item {
+    display: flex; gap: 10px; align-items: flex-start; font-size: 12px;
+  }
+  .deposit-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--green); flex-shrink: 0; margin-top: 5px;
+  }
+  .deposit-text { color: var(--muted2); line-height: 1.5; }
+  .deposit-text strong { color: var(--text); font-weight: 500; }
+
+
+  /* ── PUSH-UP TRACKER ── */
+  .pushup-log { margin-bottom: 4px; }
+  .pushup-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .pu-btn {
+    flex: 1; min-width: 80px; padding: 7px 10px; border-radius: 7px;
+    font-size: 12px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--muted2);
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    text-align: center; transition: all 0.15s; line-height: 1.4;
+  }
+  .pu-btn:hover { border-color: var(--border2); color: var(--text); }
+  .pu-btn.active-good {
+    background: var(--green-dim); border-color: var(--green-border); color: var(--green);
+  }
+  .pu-btn.active-ok {
+    background: var(--amber-dim); border-color: var(--amber-border); color: var(--amber);
+  }
+  .pu-btn.active-bad {
+    background: var(--red-dim); border-color: var(--red-border); color: var(--red);
+  }
+  .pu-checks { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+  .pu-check {
+    display: flex; align-items: center; gap: 9px;
+    font-size: 12px; color: var(--muted2); cursor: pointer;
+    user-select: none; padding: 7px 10px; border-radius: 6px;
+    background: var(--surface2); border: 1px solid var(--border);
+    transition: all 0.15s;
+  }
+  .pu-check:hover { border-color: var(--border2); }
+  .pu-check.ticked {
+    background: var(--green-dim); border-color: var(--green-border); color: var(--text);
+  }
+  .pu-check-box {
+    width: 15px; height: 15px; border-radius: 3px;
+    border: 1.5px solid var(--muted); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; color: transparent; transition: all 0.15s;
+  }
+  .pu-check.ticked .pu-check-box {
+    background: var(--green); border-color: var(--green); color: #000;
+  }
+  .pu-warn {
+    margin-top: 8px; padding: 8px 10px; border-radius: 6px;
+    font-size: 12px; display: none;
+    background: var(--red-dim); border: 1px solid var(--red-border); color: var(--red);
+  }
+  .pu-warn.show { display: block; }
+  .pu-skipped-msg {
+    font-size: 12px; color: var(--muted); padding: 6px 0; font-style: italic; display: none;
+  }
+  .pu-skipped-msg.show { display: block; }
+
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-left">
+      <div class="eyebrow">Left shoulder · Anterior deltoid strain</div>
+      <h1>Rehab<br><em>tracker</em></h1>
+    </div>
+    <div class="header-right">
+      <div class="phase-badge">Phase 1 — Active</div>
+      <div class="week-label" id="date-range"></div>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-bar-wrap">
+    <div class="pb-row">
+      <span class="pb-label">2-week completion</span>
+      <span class="pb-pct" id="pct-label">0%</span>
+    </div>
+    <div class="pb-track"><div class="pb-fill" id="pb-fill" style="width:0%"></div></div>
+    <div class="stats-row">
+      <div class="stat-pill"><div class="sv" id="stat-rehab">0</div><div class="sl">Rehab days done</div></div>
+      <div class="stat-pill"><div class="sv" id="stat-snooker">0</div><div class="sl">Snooker sessions</div></div>
+      <div class="stat-pill"><div class="sv" id="stat-streak">0</div><div class="sl">Day streak</div></div>
+      <div class="stat-pill"><div class="sv" id="stat-fatigue">—</div><div class="sl">Avg morning feel</div></div>
+    </div>
+  </div>
+
+  <!-- WEEK TABS -->
+  <div class="week-tabs">
+    <button class="week-tab active" onclick="showWeek(1, this)">Week 1</button>
+    <button class="week-tab" onclick="showWeek(2, this)">Week 2</button>
+  </div>
+
+  <!-- DAYS -->
+  <div class="days-grid" id="days-grid"></div>
+
+  <!-- PHASE 2 GATE -->
+  <div class="gate-box">
+    <h3>Phase 2 readiness gate</h3>
+    <p class="gate-sub">Tick all three when genuinely met — not just calendar time</p>
+    <div class="gate-items">
+      <div class="gate-item" id="g1" onclick="toggleGate('g1')">
+        <div class="gate-cb">✓</div>
+        <div>Pull-aparts and face pulls feel easy — no front-shoulder sensation</div>
+      </div>
+      <div class="gate-item" id="g2" onclick="toggleGate('g2')">
+        <div class="gate-cb">✓</div>
+        <div>Shoulder pain-free at rest — no background ache or morning stiffness</div>
+      </div>
+      <div class="gate-item" id="g3" onclick="toggleGate('g3')">
+        <div class="gate-cb">✓</div>
+        <div>Pain-free during daily movement — reaching, dressing, general arm use</div>
+      </div>
+    </div>
+    <div class="gate-ready-badge" id="gate-badge">
+      ✓ All gates met — ready to start Phase 2 (diagonal band lift, 3× per week)
+    </div>
+  </div>
+
+
+  <!-- DAILY REMINDERS -->
+  <div class="reminders-section">
+    <div class="reminders-header">
+      <div>
+        <h3>Daily movement warnings</h3>
+        <div class="rem-sub">Tap to acknowledge · these add up even when they feel harmless</div>
+      </div>
+      <button class="rem-reset-btn" onclick="resetReminders()">reset all</button>
+    </div>
+
+    <div class="reminder-grid" id="reminder-grid">
+
+      <div class="reminder-item type-avoid" id="rem-sleep" onclick="ackReminder('rem-sleep')">
+        <div class="rem-icon">😴</div>
+        <div class="rem-content">
+          <div class="rem-title avoid">Don't sleep on your left side</div>
+          <div class="rem-body">Hours of shoulder compression overnight undoes recovery. Sleep right side or back. If you wake stiff — this is why.</div>
+        </div>
+        <div class="rem-ack">✓</div>
+      </div>
+
+      <div class="reminder-item type-avoid" id="rem-bag" onclick="ackReminder('rem-bag')">
+        <div class="rem-icon">🎒</div>
+        <div class="rem-content">
+          <div class="rem-title avoid">No bag on left shoulder</div>
+          <div class="rem-body">A shoulder bag or strap on the left = sustained isometric load, same pattern as snooker bridging. Switch to right or wear as backpack.</div>
+        </div>
+        <div class="rem-ack">✓</div>
+      </div>
+
+      <div class="reminder-item type-caution" id="rem-overhead" onclick="ackReminder('rem-overhead')">
+        <div class="rem-icon">☝️</div>
+        <div class="rem-content">
+          <div class="rem-title caution">Overhead left arm — go slow</div>
+          <div class="rem-body">Reaching above shoulder height with the left arm loads the anterior deltoid. Deliberate slow reach is fine. Quick grab-and-pull is not.</div>
+        </div>
+        <div class="rem-ack">✓</div>
+      </div>
+
+      <div class="reminder-item type-caution" id="rem-cross" onclick="ackReminder('rem-cross')">
+        <div class="rem-icon">↗️</div>
+        <div class="rem-content">
+          <div class="rem-title caution">Avoid reaching across your body</div>
+          <div class="rem-body">Left hand reaching to the right side (passenger seat, across a table) mirrors the painful diagonal pattern from your resistance test. Use your right hand where possible.</div>
+        </div>
+        <div class="rem-ack">✓</div>
+      </div>
+
+      <div class="reminder-item type-caution" id="rem-push" onclick="ackReminder('rem-push')">
+        <div class="rem-icon">🚪</div>
+        <div class="rem-content">
+          <div class="rem-title caution">Prefer right arm for push movements</div>
+          <div class="rem-body">Pushing doors, trolleys, pushing up off the sofa — all anterior deltoid load. Not dramatic individually, but they add up across a day.</div>
+        </div>
+        <div class="rem-ack">✓</div>
+      </div>
+
+      <div class="reminder-item type-habit" id="rem-posture" onclick="ackReminder('rem-posture')">
+        <div class="rem-icon">💻</div>
+        <div class="rem-content">
+          <div class="rem-title habit">Support left elbow at the desk</div>
+          <div class="rem-body">Rounded forward posture keeps the anterior deltoid in a shortened position for hours. Rest the left elbow on the desk surface. Shoulder blade squeeze every hour.</div>
+        </div>
+        <div class="rem-ack">✓</div>
+      </div>
+
+      <div class="reminder-item type-habit" id="rem-reactive" onclick="ackReminder('rem-reactive')">
+        <div class="rem-icon">⚡</div>
+        <div class="rem-content">
+          <div class="rem-title habit">Watch for reactive left arm movements</div>
+          <div class="rem-body">Quick grab to catch something falling, instinctive reach — unexpected load on a guarded muscle is how strains get aggravated. Build awareness, not paranoia.</div>
+        </div>
+        <div class="rem-ack">✓</div>
+      </div>
+
+    </div>
+
+    <!-- WHY REHAB WORKS -->
+    <div class="rem-deposit-box">
+      <div class="rem-deposit-title">Why the rehab exercises work — the deposit mechanism</div>
+      <div class="deposit-items">
+        <div class="deposit-item">
+          <div class="deposit-dot"></div>
+          <div class="deposit-text"><strong>Offloading:</strong> pull-aparts and face pulls train the posterior shoulder to carry stabilisation load — so the strained anterior deltoid gets less daily demand just from existing.</div>
+        </div>
+        <div class="deposit-item">
+          <div class="deposit-dot"></div>
+          <div class="deposit-text"><strong>Tissue signal:</strong> controlled sub-painful loading tells the body to lay down organised collagen repair. Complete rest produces weaker, disorganised healing.</div>
+        </div>
+        <div class="deposit-item">
+          <div class="deposit-dot"></div>
+          <div class="deposit-text"><strong>Inhibition reversal:</strong> the nervous system is deliberately limiting how hard the anterior deltoid fires (hence 50% asymmetry). Consistent gentle exercise gradually lifts this protective brake.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTION BUTTONS -->
+  <div class="action-bar">
+    <button class="action-btn save-btn" onclick="saveData()">
+      <span class="btn-icon">&#8595;</span> Save snapshot
+    </button>
+    <button class="action-btn reset-btn" onclick="confirmReset()">
+      <span class="btn-icon">&#8635;</span> Reset all
+    </button>
+  </div>
+
+  <div class="footer">Left shoulder rehab · 2-week tracker</div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<!-- RESET MODAL -->
+<div id="modal-overlay" class="modal-overlay" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Reset all data?</div>
+    <div class="modal-sub">This will clear every checkbox, fatigue log, session record and note. Cannot be undone.</div>
+    <div class="modal-buttons">
+      <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn confirm" onclick="doReset()">Yes, reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- SAVE MODAL -->
+<div id="save-overlay" class="modal-overlay" onclick="closeSaveModal()">
+  <div class="modal save-modal" onclick="event.stopPropagation()">
+    <div class="save-modal-header">
+      <div class="modal-title">Snapshot</div>
+      <button class="copy-btn" id="copy-btn" onclick="copySnapshot()">Copy all</button>
+    </div>
+    <div class="modal-sub">Select all and copy, or use the button above.</div>
+    <textarea id="snapshot-text" class="snapshot-textarea" readonly></textarea>
+    <div class="modal-buttons" style="margin-top:12px">
+      <button class="modal-btn cancel" onclick="closeSaveModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA CONFIG ──
+const REHAB_ITEMS = [
+  { id: 'pull', label: 'Band pull-apart', sub: '2–3 sets · 15–20 reps · light band' },
+  { id: 'face', label: 'Face pull', sub: '2–3 sets · 15–20 reps · light band' },
+];
+const REMINDER_KEYS = ['rem-sleep','rem-bag','rem-overhead','rem-cross','rem-push','rem-posture','rem-reactive'];
+
+// Week starts Sunday 24 May 2026
+// Sun·Mon·Tue·Wed·Thu·Fri·Sat pattern
+const WEEK1 = [
+  { key: 'w1-sun', name: 'Sunday',    rehab: true  },  // 24 May — start day
+  { key: 'w1-mon', name: 'Monday',    rehab: true  },  // 25 May
+  { key: 'w1-tue', name: 'Tuesday',   rehab: false },  // 26 May
+  { key: 'w1-wed', name: 'Wednesday', rehab: true  },  // 27 May
+  { key: 'w1-thu', name: 'Thursday',  rehab: true  },  // 28 May
+  { key: 'w1-fri', name: 'Friday',    rehab: true  },  // 29 May
+  { key: 'w1-sat', name: 'Saturday',  rehab: true  },  // 30 May
+];
+const WEEK2 = [
+  { key: 'w2-sun', name: 'Sunday',    rehab: false },  // 31 May
+  { key: 'w2-mon', name: 'Monday',    rehab: true  },  // 1 Jun
+  { key: 'w2-tue', name: 'Tuesday',   rehab: false },  // 2 Jun
+  { key: 'w2-wed', name: 'Wednesday', rehab: true  },  // 3 Jun
+  { key: 'w2-thu', name: 'Thursday',  rehab: true  },  // 4 Jun
+  { key: 'w2-fri', name: 'Friday',    rehab: true  },  // 5 Jun
+  { key: 'w2-sat', name: 'Saturday',  rehab: true  },  // 6 Jun
+];
+
+// ── STORAGE ──
+function save(key, val) {
+  try { localStorage.setItem('sr_' + key, JSON.stringify(val)); } catch(e) {}
+}
+function load(key, def) {
+  try { const v = localStorage.getItem('sr_' + key); return v !== null ? JSON.parse(v) : def; } catch(e) { return def; }
+}
+
+// ── DATES ── fixed start: Tuesday 26 May 2026
+function getStartDate() {
+  return new Date(2026, 4, 24); // Sunday 24 May 2026
+}
+
+function getDayDate(weekIdx, dayIdx) {
+  const start = getStartDate();
+  const offset = weekIdx * 7 + dayIdx;
+  const d = new Date(start);
+  d.setDate(d.getDate() + offset);
+  return d;
+}
+
+function fmtDate(d) {
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+function isToday(d) {
+  const t = new Date(); t.setHours(0,0,0,0);
+  const c = new Date(d); c.setHours(0,0,0,0);
+  return t.getTime() === c.getTime();
+}
+
+// ── CURRENT WEEK STATE ──
+let currentWeek = 1;
+let openCards = new Set();
+
+// ── BUILD UI ──
+function buildDays(weekNum) {
+  const days = weekNum === 1 ? WEEK1 : WEEK2;
+  const weekIdx = weekNum - 1;
+  const grid = document.getElementById('days-grid');
+  grid.innerHTML = '';
+
+  days.forEach((day, i) => {
+    const date = getDayDate(weekIdx, i);
+    const today = isToday(date);
+    const isOpen = openCards.has(day.key) || today;
+    const state = load(day.key, {});
+
+    const card = document.createElement('div');
+    card.className = 'day-card' + (today ? ' today' : '') + (isOpen ? ' open' : '');
+    card.id = 'card-' + day.key;
+
+    // Check summary dots
+    const totalChecks = day.rehab ? REHAB_ITEMS.length : 0;
+    const doneChecks = REHAB_ITEMS.filter(it => state['chk_' + it.id]).length;
+
+    let dotsHtml = '';
+    if (day.rehab) {
+      REHAB_ITEMS.forEach(it => {
+        dotsHtml += `<div class="mini-dot ${state['chk_' + it.id] ? 'done' : ''}"></div>`;
+      });
+    }
+
+    // Type badge — dynamic based on whether snooker was logged
+    const typeLabel = state.played === 'yes' ? '🎱 Snooker' : state.played === 'no' ? 'Rest' : 'Log day';
+    const typeClass = state.played === 'yes' ? 'snooker' : state.played === 'no' ? 'rest' : 'unlogged';
+
+    card.innerHTML = `
+      <div class="day-header" onclick="toggleCard('${day.key}')">
+        <div class="day-name-wrap">
+          <div class="day-name">
+            ${day.name}
+            ${today ? '<span class="today-badge">Today</span>' : ''}
+          </div>
+          <div class="day-date">${fmtDate(date)}</div>
+        </div>
+        <span class="day-type-badge ${typeClass}">${typeLabel}</span>
+        <div class="day-check-summary">${dotsHtml}</div>
+        <span class="toggle-chevron">▾</span>
+      </div>
+      <div class="day-body">
+        ${buildDayBody(day, state, weekIdx, i)}
+      </div>
+    `;
+
+    grid.appendChild(card);
+  });
+}
+
+
+function buildPushupSection(key, state) {
+  const pu = state.pushup || {};
+  const typeMap = {
+    wall:    { label: 'Wall',    cls: 'good', desc: 'Minimal load' },
+    incline: { label: 'Incline', cls: 'good', desc: 'Preferred' },
+    wide:    { label: 'Wide floor', cls: 'ok', desc: 'Moderate' },
+    skipped: { label: 'Skipped', cls: 'ok',  desc: 'Rest day' },
+  };
+  const controls = [
+    { id: 'wide_grip',    label: 'Wide grip — hands at or outside shoulder width' },
+    { id: 'no_diamond',   label: 'No diamond / narrow grip used' },
+    { id: 'slow_lower',   label: 'Lowered slowly — controlled eccentric' },
+    { id: 'no_shrug',     label: 'Left shoulder stayed down — no rising toward ear' },
+    { id: 'no_pain',      label: 'Zero sharp pain in front of left shoulder' },
+    { id: 'half_volume',  label: 'Volume at ~50% of normal or less' },
+  ];
+
+  let html = `<div class="pushup-log">`;
+  html += `<div class="section-title" style="margin-top:14px">Push-up <span class="optional-tag">log form + control</span></div>`;
+
+  // Type selector
+  html += `<div class="pushup-row">`;
+  Object.entries(typeMap).forEach(([val, cfg]) => {
+    const active = pu.type === val ? `active-${cfg.cls}` : '';
+    html += `<button class="pu-btn ${active}" onclick="setPuType('${key}','${val}',this)">
+      ${cfg.label}<br><span style="font-size:10px;opacity:0.7">${cfg.desc}</span>
+    </button>`;
+  });
+  html += `</div>`;
+
+  // Skipped message
+  const skippedShow = pu.type === 'skipped' ? 'show' : '';
+  html += `<div class="pu-skipped-msg ${skippedShow}" id="pu-skip-${key}">No push-ups today — shoulder gets a full rest from pressing load.</div>`;
+
+  // Control checklist (hidden if skipped)
+  const hideChecks = pu.type === 'skipped' ? 'style="display:none"' : '';
+  html += `<div class="pu-checks" id="pu-checks-${key}" ${hideChecks}>`;
+  controls.forEach(c => {
+    const ticked = pu[c.id] ? 'ticked' : '';
+    html += `<div class="pu-check ${ticked}" onclick="togglePuCheck('${key}','${c.id}',this)">
+      <div class="pu-check-box">✓</div>
+      <span>${c.label}</span>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Warning if no_pain not ticked and something else was done
+  const warnShow = pu.type && pu.type !== 'skipped' && pu.no_pain === false ? 'show' : '';
+  html += `<div class="pu-warn ${warnShow}" id="pu-warn-${key}">
+    Front shoulder pain during push-ups — drop to a higher incline or wall next session.
+  </div>`;
+
+  html += `</div>`;
+  return html;
+}
+
+function setPuType(key, val, btn) {
+  const state = load(key, {});
+  if (!state.pushup) state.pushup = {};
+  state.pushup.type = val;
+  save(key, state);
+  // Update buttons
+  btn.closest('.pushup-row').querySelectorAll('.pu-btn').forEach(b => {
+    b.className = 'pu-btn';
+  });
+  const clsMap = { wall:'good', incline:'good', wide:'ok', skipped:'ok' };
+  btn.classList.add('active-' + (clsMap[val] || 'ok'));
+  // Show/hide sections
+  const checksEl = document.getElementById('pu-checks-' + key);
+  const skipEl   = document.getElementById('pu-skip-' + key);
+  if (checksEl) checksEl.style.display = val === 'skipped' ? 'none' : '';
+  if (skipEl)   skipEl.classList.toggle('show', val === 'skipped');
+}
+
+function togglePuCheck(key, field, el) {
+  const state = load(key, {});
+  if (!state.pushup) state.pushup = {};
+  state.pushup[field] = !state.pushup[field];
+  save(key, state);
+  el.classList.toggle('ticked', state.pushup[field]);
+  el.querySelector('.pu-check-box').style.color = state.pushup[field] ? '#000' : 'transparent';
+  // Show/hide pain warning
+  const warnEl = document.getElementById('pu-warn-' + key);
+  if (warnEl && field === 'no_pain') {
+    warnEl.classList.toggle('show', !state.pushup[field] && state.pushup.type && state.pushup.type !== 'skipped');
+  }
+}
+
+function buildDayBody(day, state, weekIdx, dayIdx) {
+  let html = '';
+
+  // Morning shoulder check
+  html += `<div class="section-title">Morning shoulder check</div>`;
+  html += `<div class="morning-check-row">`;
+  const morningOpts = [
+    { val: '1', label: '😊 Feels fine', cls: '1' },
+    { val: '2', label: '😐 Mild ache', cls: '2' },
+    { val: '3', label: '😣 Stiff / sore', cls: '3' },
+  ];
+  morningOpts.forEach(o => {
+    const active = state.morning === o.val ? 'active' : '';
+    html += `<button class="morning-btn ${active}" data-val="${o.val}"
+      onclick="setMorning('${day.key}', '${o.val}', this)">${o.label}</button>`;
+  });
+  html += `</div>`;
+
+  // Snooker session log — always shown, optional on every day
+  html += `<div class="section-title">Snooker session <span class="optional-tag">optional</span></div>`;
+  html += `<div class="session-row">`;
+  const playedY = state.played === 'yes' ? 'active-yes' : '';
+  const playedN = state.played === 'no' ? 'active-no' : '';
+  html += `<div class="session-toggle">
+    <button class="stog-btn ${playedY}" onclick="setPlayed('${day.key}', 'yes', this)">🎱 Played</button>
+    <button class="stog-btn ${playedN}" onclick="setPlayed('${day.key}', 'no', this)">Rest</button>
+  </div>`;
+  html += `<select class="duration-select" onchange="setDuration('${day.key}', this.value)" ${state.played !== 'yes' ? 'style="opacity:0.35;pointer-events:none"' : ''}>
+    <option value="">Duration</option>
+    <option value="15" ${state.duration==='15'?'selected':''}>15 min</option>
+    <option value="20" ${state.duration==='20'?'selected':''}>20 min</option>
+    <option value="30" ${state.duration==='30'?'selected':''}>30 min ✓</option>
+    <option value="45" ${state.duration==='45'?'selected':''}>45 min ⚠</option>
+    <option value="60" ${state.duration==='60'?'selected':''}>60 min ⚠</option>
+    <option value="90" ${state.duration==='90'?'selected':''}>90 min+ ✗</option>
+  </select>`;
+  html += `</div>`;
+
+  // Rehab checklist
+  if (day.rehab) {
+    html += `<div class="section-title" style="margin-top:14px">Rehab exercises</div>`;
+    html += `<div class="checklist">`;
+    REHAB_ITEMS.forEach(it => {
+      const checked = state['chk_' + it.id] ? 'checked' : '';
+      html += `<div class="check-item ${checked}" onclick="toggleCheck('${day.key}', '${it.id}', this)">
+        <div class="check-box">✓</div>
+        <div class="check-label">
+          <div class="cl-main">${it.label}</div>
+          <div class="cl-sub">${it.sub}</div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  } else {
+    html += `<div class="section-title" style="margin-top:14px">Rehab exercises</div>`;
+    html += `<div style="font-size:13px;color:var(--muted);padding:8px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">No scheduled exercises today — rest and recover. You can still log snooker above if you played.</div>`;
+  }
+
+  // Push-up section
+  html += buildPushupSection(day.key, state);
+
+  // Fatigue slider
+  html += `<div class="fatigue-section" style="margin-top:8px">`;
+  html += `<div class="section-title">Post-session shoulder fatigue</div>`;
+  const fatVal = state.fatigue !== undefined ? state.fatigue : 0;
+  const fatColor = fatColor_fn(fatVal);
+  const fatDesc = fatDesc_fn(fatVal);
+  html += `<div style="display:flex;align-items:center;gap:14px;margin-bottom:6px">
+    <span class="fatigue-value" id="fv-${day.key}">${fatVal === 0 ? '—' : fatVal}</span>
+    <div style="flex:1">
+      <div style="position:relative;height:6px;background:var(--surface3);border-radius:3px;margin-bottom:8px">
+        <div id="ff-${day.key}" style="height:100%;width:${fatVal*10}%;border-radius:3px;background:${fatColor};transition:width 0.2s,background 0.2s"></div>
+      </div>
+      <input type="range" min="0" max="10" value="${fatVal}"
+        oninput="setFatigue('${day.key}', this.value)"
+        style="position:absolute;width:calc(100% - 80px);margin-top:-20px;opacity:0;cursor:pointer">
+      <input type="range" min="0" max="10" value="${fatVal}"
+        oninput="setFatigue('${day.key}', this.value)">
+    </div>
+  </div>`;
+  html += `<div class="fzone-labels">
+    <span style="color:var(--green)">0 — none</span>
+    <span>mild</span>
+    <span style="color:var(--amber)">moderate</span>
+    <span style="color:var(--red)">10 — sharp</span>
+  </div>`;
+
+  // Fatigue signal
+  if (fatVal >= 7) {
+    html += `<div style="margin-top:8px;padding:8px 10px;border-radius:6px;background:var(--red-dim);border:1px solid var(--red-border);font-size:12px;color:var(--red)">
+      ⚠ High fatigue — reduce session length next time. If sharp, rest tomorrow.
+    </div>`;
+  } else if (fatVal >= 4) {
+    html += `<div style="margin-top:8px;padding:8px 10px;border-radius:6px;background:var(--amber-dim);border:1px solid var(--amber-border);font-size:12px;color:var(--amber)">
+      Moderate — acceptable if it clears by morning. Check tomorrow's morning log.
+    </div>`;
+  } else if (fatVal > 0) {
+    html += `<div style="margin-top:8px;padding:8px 10px;border-radius:6px;background:var(--green-dim);border:1px solid var(--green-border);font-size:12px;color:var(--green)">
+      Good — load well managed today.
+    </div>`;
+  }
+  html += `</div>`;
+
+  // Notes
+  html += `<div class="notes-wrap">
+    <div class="section-title" style="margin-bottom:6px">Notes</div>
+    <textarea class="notes-input" placeholder="How did it feel? Any front shoulder sensation? Anything to flag..."
+      oninput="setNotes('${day.key}', this.value)">${state.notes || ''}</textarea>
+  </div>`;
+
+  return html;
+}
+
+function fatColor_fn(v) {
+  if (v >= 7) return 'var(--red)';
+  if (v >= 4) return 'var(--amber)';
+  return 'var(--green)';
+}
+function fatDesc_fn(v) {
+  if (v === 0) return 'not logged';
+  if (v <= 2) return 'feeling good';
+  if (v <= 4) return 'mild';
+  if (v <= 6) return 'moderate';
+  if (v <= 8) return 'high';
+  return 'sharp — rest';
+}
+
+// ── INTERACTIONS ──
+function toggleCard(key) {
+  const card = document.getElementById('card-' + key);
+  const isOpen = card.classList.toggle('open');
+  if (isOpen) openCards.add(key); else openCards.delete(key);
+}
+
+function toggleCheck(key, itemId, el) {
+  const state = load(key, {});
+  state['chk_' + itemId] = !state['chk_' + itemId];
+  save(key, state);
+  el.classList.toggle('checked', state['chk_' + itemId]);
+  el.querySelector('.check-box').style.color = state['chk_' + itemId] ? '#000' : 'transparent';
+  refreshDots(key);
+  updateStats();
+}
+
+function setMorning(key, val, btn) {
+  const state = load(key, {});
+  state.morning = val;
+  save(key, state);
+  btn.closest('.morning-check-row').querySelectorAll('.morning-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.val === val);
+  });
+  updateStats();
+}
+
+function setPlayed(key, val, btn) {
+  const state = load(key, {});
+  state.played = val;
+  save(key, state);
+  btn.closest('.session-toggle').querySelectorAll('.stog-btn').forEach(b => b.className = 'stog-btn');
+  btn.classList.add(val === 'yes' ? 'active-yes' : 'active-no');
+  // Enable/disable duration selector
+  const durSel = btn.closest('.session-row').querySelector('.duration-select');
+  if (durSel) {
+    durSel.style.opacity = val === 'yes' ? '1' : '0.35';
+    durSel.style.pointerEvents = val === 'yes' ? 'auto' : 'none';
+  }
+  // Refresh badge in card header
+  const card = document.getElementById('card-' + key);
+  if (card) {
+    const badge = card.querySelector('.day-type-badge');
+    if (badge) {
+      badge.textContent = val === 'yes' ? '🎱 Snooker' : 'Rest';
+      badge.className = 'day-type-badge ' + (val === 'yes' ? 'snooker' : 'rest');
+    }
+  }
+  updateStats();
+}
+
+function setDuration(key, val) {
+  const state = load(key, {}); state.duration = val; save(key, state);
+}
+
+function setFatigue(key, val) {
+  val = parseInt(val);
+  const state = load(key, {}); state.fatigue = val; save(key, state);
+  const fv = document.getElementById('fv-' + key);
+  const ff = document.getElementById('ff-' + key);
+  if (fv) fv.textContent = val === 0 ? '—' : val;
+  if (ff) { ff.style.width = (val * 10) + '%'; ff.style.background = fatColor_fn(val); }
+  updateStats();
+}
+
+function setNotes(key, val) {
+  const state = load(key, {}); state.notes = val; save(key, state);
+}
+
+function refreshDots(key) {
+  const days = [...WEEK1, ...WEEK2];
+  const day = days.find(d => d.key === key);
+  if (!day || !day.rehab) return;
+  const card = document.getElementById('card-' + key);
+  if (!card) return;
+  const state = load(key, {});
+  const dots = card.querySelectorAll('.mini-dot');
+  REHAB_ITEMS.forEach((it, i) => {
+    if (dots[i]) dots[i].classList.toggle('done', !!state['chk_' + it.id]);
+  });
+}
+
+function toggleGate(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('met');
+  save('gate_' + id, el.classList.contains('met'));
+  checkGates();
+}
+
+function checkGates() {
+  const allMet = ['g1','g2','g3'].every(id => document.getElementById(id)?.classList.contains('met'));
+  document.getElementById('gate-badge').classList.toggle('show', allMet);
+}
+
+function loadGates() {
+  ['g1','g2','g3'].forEach(id => {
+    if (load('gate_' + id, false)) {
+      document.getElementById(id)?.classList.add('met');
+    }
+  });
+  checkGates();
+}
+
+// ── STATS ──
+function updateStats() {
+  const allDays = [...WEEK1, ...WEEK2];
+
+  // Rehab days done
+  let rehabDone = 0;
+  allDays.forEach(d => {
+    if (!d.rehab) return;
+    const state = load(d.key, {});
+    const allChecked = REHAB_ITEMS.every(it => state['chk_' + it.id]);
+    if (allChecked) rehabDone++;
+  });
+
+  // Snooker sessions played (any day)
+  let snookerPlayed = 0;
+  allDays.forEach(d => {
+    const state = load(d.key, {});
+    if (state.played === 'yes') snookerPlayed++;
+  });
+
+  // Streak (consecutive days with any activity logged going back from today)
+  let streak = 0;
+  const todayMs = new Date(); todayMs.setHours(0,0,0,0);
+  const startMs = getStartDate(); startMs.setHours(0,0,0,0);
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(todayMs); d.setDate(d.getDate() - i);
+    const offset = Math.round((d - startMs) / 86400000);
+    if (offset < 0 || offset >= 14) break;
+    const wIdx = Math.floor(offset / 7);
+    const dIdx = offset % 7;
+    const weeks = [WEEK1, WEEK2];
+    if (!weeks[wIdx] || !weeks[wIdx][dIdx]) break;
+    const key = weeks[wIdx][dIdx].key;
+    const state = load(key, {});
+    const hasActivity = state.morning || state.fatigue > 0 || REHAB_ITEMS.some(it => state['chk_' + it.id]);
+    if (hasActivity) streak++; else break;
+  }
+
+  // Avg morning feel
+  let morningSum = 0, morningCount = 0;
+  allDays.forEach(d => {
+    const state = load(d.key, {});
+    if (state.morning) { morningSum += parseInt(state.morning); morningCount++; }
+  });
+  const morningAvg = morningCount > 0 ? (morningSum / morningCount).toFixed(1) : '—';
+  const morningLabel = morningAvg === '—' ? '—' : morningAvg <= 1.3 ? '😊' : morningAvg <= 2 ? '😐' : '😣';
+
+  // Progress %
+  const totalRehabDays = allDays.filter(d => d.rehab).length;
+  const pct = totalRehabDays > 0 ? Math.round((rehabDone / totalRehabDays) * 100) : 0;
+
+  document.getElementById('stat-rehab').textContent = rehabDone;
+  document.getElementById('stat-snooker').textContent = snookerPlayed;
+  document.getElementById('stat-streak').textContent = streak;
+  document.getElementById('stat-fatigue').textContent = morningLabel;
+  document.getElementById('pct-label').textContent = pct + '%';
+  document.getElementById('pb-fill').style.width = pct + '%';
+}
+
+// ── WEEK SWITCH ──
+function showWeek(n, btn) {
+  currentWeek = n;
+  document.querySelectorAll('.week-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  buildDays(n);
+}
+
+// ── DATE RANGE LABEL ──
+function setDateRange() {
+  const start = getStartDate();
+  const end = new Date(start); end.setDate(end.getDate() + 13);
+  document.getElementById('date-range').textContent =
+    fmtDate(start) + ' – ' + fmtDate(end); // 24 May – 6 Jun
+}
+
+
+// ── PRE-POPULATE DAY 0 (Sun 24 May) on first load ──
+(function() {
+  const key = 'w1-sun';
+  const existing = localStorage.getItem('sr_' + key);
+  if (!existing) {
+    const state = {
+      morning: '1',
+      fatigue: 0,
+      notes: 'Woke up feeling better — slept on right side. Yesterday (Sat 23 May): did 3-4 sets of both face pulls and band pull-aparts. Push-ups controlled: wide grip, inclined, slow reps only. Good session.'
+    };
+    localStorage.setItem('sr_' + key, JSON.stringify(state));
+  }
+})();
+
+// ── INIT ──
+setDateRange();
+
+// Auto-open today's card + switch to correct week
+const _today = new Date(); _today.setHours(0,0,0,0);
+const _start = getStartDate(); _start.setHours(0,0,0,0);
+const _diff = Math.round((_today - _start) / 86400000);
+if (_diff >= 0 && _diff < 14) {
+  const _wIdx = Math.floor(_diff / 7);
+  const _dIdx = _diff % 7;
+  const _weeks = [WEEK1, WEEK2];
+  if (_weeks[_wIdx] && _weeks[_wIdx][_dIdx]) {
+    openCards.add(_weeks[_wIdx][_dIdx].key);
+  }
+  currentWeek = _wIdx + 1;
+}
+
+buildDays(currentWeek);
+// Highlight correct tab
+document.querySelectorAll('.week-tab').forEach((t,i) => t.classList.toggle('active', i + 1 === currentWeek));
+updateStats();
+loadGates();
+loadReminders();
+
+// ── SAVE SNAPSHOT ──
+function buildSnapshotText() {
+  const allDays = [...WEEK1, ...WEEK2];
+  const morningMap = {'1':'Feels fine','2':'Mild ache','3':'Stiff / sore'};
+  const lines = ['LEFT SHOULDER REHAB — SNAPSHOT', '24 May – 6 Jun 2026', '═'.repeat(36), ''];
+  allDays.forEach((d, i) => {
+    const weekNum = i < 7 ? 1 : 2;
+    const dayNum = i < 7 ? i : i - 7;
+    const date = getDayDate(weekNum - 1, dayNum);
+    const state = load(d.key, {});
+    lines.push(`${d.name.toUpperCase()} ${fmtDate(date)}  [Week ${weekNum}]`);
+    lines.push(`  Morning feel : ${morningMap[state.morning] || 'not logged'}`);
+    if (d.type === 'snooker') {
+      const pl = state.played === 'yes' ? 'Played' : state.played === 'no' ? 'Skipped' : 'not logged';
+      const dur = state.duration ? ' · ' + state.duration + ' min' : '';
+      lines.push(`  Session      : ${pl}${dur}`);
+    }
+    if (d.rehab) {
+      REHAB_ITEMS.forEach(it => {
+        const done = state['chk_' + it.id] ? '✓' : '—';
+        lines.push(`  ${it.label.padEnd(20)}: ${done}`);
+      });
+    }
+    const fat = state.fatigue > 0 ? state.fatigue + '/10' : 'not logged';
+    lines.push(`  Fatigue      : ${fat}`);
+    if (state.pushup && state.pushup.type) {
+      const puLabels = {wall:'Wall',incline:'Incline',wide:'Wide floor',skipped:'Skipped'};
+      lines.push(`  Push-up type : ${puLabels[state.pushup.type] || state.pushup.type}`);
+      const puControls = ['wide_grip','no_diamond','slow_lower','no_shrug','no_pain','half_volume'];
+      const puNames = ['Wide grip','No diamond grip','Slow lower','No shoulder shrug','No pain','Half volume'];
+      const ticked = puControls.filter((c,i) => state.pushup[c]).map((c,i) => puNames[puControls.indexOf(c)]);
+      if (ticked.length) lines.push(`  Controls met : ${ticked.join(', ')}`);
+    }
+    if (state.notes && state.notes.trim()) lines.push(`  Notes        : ${state.notes.trim()}`);
+    lines.push('');
+  });
+  lines.push('─'.repeat(36));
+  lines.push('PHASE 2 GATES');
+  lines.push(`  Pull-aparts / face pulls easy : ${load('gate_g1', false) ? '✓ met' : '— not yet'}`);
+  lines.push(`  Pain-free at rest             : ${load('gate_g2', false) ? '✓ met' : '— not yet'}`);
+  lines.push(`  Pain-free daily movement      : ${load('gate_g3', false) ? '✓ met' : '— not yet'}`);
+  return lines.join('\n');
+}
+
+function saveData() {
+  const text = buildSnapshotText();
+  document.getElementById('snapshot-text').value = text;
+  document.getElementById('save-overlay').classList.add('show');
+  document.getElementById('copy-btn').textContent = 'Copy all';
+  document.getElementById('copy-btn').classList.remove('copied');
+}
+
+function closeSaveModal() {
+  document.getElementById('save-overlay').classList.remove('show');
+}
+
+function copySnapshot() {
+  const ta = document.getElementById('snapshot-text');
+  ta.select();
+  try {
+    navigator.clipboard.writeText(ta.value).catch(() => document.execCommand('copy'));
+  } catch(e) { document.execCommand('copy'); }
+  const btn = document.getElementById('copy-btn');
+  btn.textContent = '✓ Copied';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'Copy all'; btn.classList.remove('copied'); }, 2000);
+}
+
+
+// ── REMINDERS ──
+function ackReminder(id) {
+  const el = document.getElementById(id);
+  const isAck = el.classList.toggle('acknowledged');
+  save('ack_' + id, isAck);
+}
+
+function resetReminders() {
+  REMINDER_KEYS.forEach(id => {
+    document.getElementById(id)?.classList.remove('acknowledged');
+    save('ack_' + id, false);
+  });
+  showToast('Reminders reset', false);
+}
+
+function loadReminders() {
+  REMINDER_KEYS.forEach(id => {
+    if (load('ack_' + id, false)) {
+      document.getElementById(id)?.classList.add('acknowledged');
+    }
+  });
+}
+
+// ── RESET ──
+function confirmReset() {
+  document.getElementById('modal-overlay').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('show');
+}
+function doReset() {
+  const allDays = [...WEEK1, ...WEEK2];
+  allDays.forEach(d => { try { localStorage.removeItem('sr_' + d.key); } catch(e) {} });
+  ['gate_g1','gate_g2','gate_g3'].forEach(k => { try { localStorage.removeItem('sr_' + k); } catch(e) {} });
+  closeModal();
+  openCards.clear();
+  buildDays(currentWeek);
+  updateStats();
+  // Reset gate UI
+  ['g1','g2','g3'].forEach(id => document.getElementById(id)?.classList.remove('met'));
+  document.getElementById('gate-badge')?.classList.remove('show');
+  showToast('Data reset', false);
+}
+
+// ── TOAST ──
+function showToast(msg, green) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (green ? ' green' : '');
+  setTimeout(() => { t.className = 'toast'; }, 2800);
+}
+
+</script>
+</body>
+</html>
