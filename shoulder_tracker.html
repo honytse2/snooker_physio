@@ -747,7 +747,7 @@
         <div class="rem-ack">✓</div>
       </div>
 
-      <div class="rem-category-label">While running</div>
+      <div class="rem-category-label">While walking</div>
 
       <div class="reminder-item type-habit" id="rem-armswing" onclick="ackReminder('rem-armswing')">
         <div class="rem-icon">🚶</div>
@@ -872,22 +872,22 @@ const REMINDER_KEYS = ['rem-sleep','rem-bag','rem-overhead','rem-cross','rem-pus
 // Week starts Sunday 24 May 2026
 // Sun·Mon·Tue·Wed·Thu·Fri·Sat pattern
 const WEEK1 = [
-  { key: 'w1-sun', name: 'Sunday',    rehab: true  },  // 24 May — start day
-  { key: 'w1-mon', name: 'Monday',    rehab: true  },  // 25 May
-  { key: 'w1-tue', name: 'Tuesday',   rehab: false },  // 26 May
-  { key: 'w1-wed', name: 'Wednesday', rehab: true  },  // 27 May
-  { key: 'w1-thu', name: 'Thursday',  rehab: true  },  // 28 May
-  { key: 'w1-fri', name: 'Friday',    rehab: true  },  // 29 May
-  { key: 'w1-sat', name: 'Saturday',  rehab: true  },  // 30 May
+  { key: 'w1-sun', name: 'Sunday',    rehab: true },  // 24 May — start day
+  { key: 'w1-mon', name: 'Monday',    rehab: true },  // 25 May
+  { key: 'w1-tue', name: 'Tuesday',   rehab: true },  // 26 May
+  { key: 'w1-wed', name: 'Wednesday', rehab: true },  // 27 May
+  { key: 'w1-thu', name: 'Thursday',  rehab: true },  // 28 May
+  { key: 'w1-fri', name: 'Friday',    rehab: true },  // 29 May
+  { key: 'w1-sat', name: 'Saturday',  rehab: true },  // 30 May
 ];
 const WEEK2 = [
-  { key: 'w2-sun', name: 'Sunday',    rehab: false },  // 31 May
-  { key: 'w2-mon', name: 'Monday',    rehab: true  },  // 1 Jun
-  { key: 'w2-tue', name: 'Tuesday',   rehab: false },  // 2 Jun
-  { key: 'w2-wed', name: 'Wednesday', rehab: true  },  // 3 Jun
-  { key: 'w2-thu', name: 'Thursday',  rehab: true  },  // 4 Jun
-  { key: 'w2-fri', name: 'Friday',    rehab: true  },  // 5 Jun
-  { key: 'w2-sat', name: 'Saturday',  rehab: true  },  // 6 Jun
+  { key: 'w2-sun', name: 'Sunday',    rehab: true },  // 31 May
+  { key: 'w2-mon', name: 'Monday',    rehab: true },  // 1 Jun
+  { key: 'w2-tue', name: 'Tuesday',   rehab: true },  // 2 Jun
+  { key: 'w2-wed', name: 'Wednesday', rehab: true },  // 3 Jun
+  { key: 'w2-thu', name: 'Thursday',  rehab: true },  // 4 Jun
+  { key: 'w2-fri', name: 'Friday',    rehab: true },  // 5 Jun
+  { key: 'w2-sat', name: 'Saturday',  rehab: true },  // 6 Jun
 ];
 
 // ── STORAGE ──
@@ -1123,7 +1123,7 @@ function buildDayBody(day, state, weekIdx, dayIdx) {
     html += `</div>`;
   } else {
     html += `<div class="section-title" style="margin-top:14px">Rehab exercises</div>`;
-    html += `<div style="font-size:13px;color:var(--muted);padding:8px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">No scheduled exercises today — rest and recover. You can still log snooker above if you played.</div>`;
+    html += `<div style="font-size:13px;color:var(--muted);padding:8px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">Rest day from structured exercises. You can still do seated scapular retractions freely — those have no limit.</div>`;
   }
 
   // Push-up section
